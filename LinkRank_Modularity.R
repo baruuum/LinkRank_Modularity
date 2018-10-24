@@ -1,7 +1,7 @@
 # LinkRank 
 lr.modularity <- function(g,
                           partition, 
-                          alpha=.85, 
+                          damping=.85, 
                           pr.algo = 'prpack',
                           use.weights=T) {
     
@@ -9,30 +9,23 @@ lr.modularity <- function(g,
     
     ## g           = graph (igraph object)
     ## partition   = graph partition (vector or "communities" object)
-    ## alpha       = damping factor (1 - teleportation prob.)
-    ## pr.algo     = algorithm to calculate Perron vector 
+    ## damping     = damping factor (1 - teleportation prob.)
+    ## pr.algo     = algorithm to calculate Perron vector,
+    ##               possible options are "prpack", "arpack", and "power"
     ## use.weights = whether to use edge-weights in the calculation
     
     require(igraph)
     
-    # get vertex sequences
+    # no of nodes
+    n <- vcount(g)
     
-    if (is.null(vertex_attr(g, 'name'))) {
-        
-        warning('vertex attribute "name" is NULL ... using numerical values')
-        v.names <- 1:vcount(g)
-        
-    } else {
-        
-        v.names <- vertex_attr(g, 'name')
-        
-    }
+    # node sequence
+    v.seq <- seq_len(n)
     
     # get membership vector
-    
     if (class(partition) == 'communities') {
         
-        pp <- membership(pp)
+        pp <- membership(partition)
         
     } else {
         
@@ -41,11 +34,11 @@ lr.modularity <- function(g,
     } 
     
     # check dimensions
-    if (length(pp) != length(v.names)) 
+    if (length(pp) != length(v.seq)) 
         stop('Length of partition differs from number of nodes!')
     
     # matrix of vertices and partition
-    m.mat <- cbind(v.names,partition)
+    m.mat <- cbind(v.seq, pp)
     
     # get adjacency matrix
     if (use.weights) {
@@ -64,9 +57,6 @@ lr.modularity <- function(g,
         ww <- NULL
         
     }
-    
-    # no of nodes
-    n <- vcount(g)
     
     # out degrees
     if (use.weights) {
@@ -93,19 +83,20 @@ lr.modularity <- function(g,
     }
     
     # add teleportation probabilities
-    Tmat <- Matrix::Matrix(1/n * (alpha*dangling + 1- alpha), nrow=n, ncol=n)
-    G <- alpha*G.temp + Tmat
+    Tmat <- Matrix::Matrix(1/n * (damping * dangling + 1 - damping), 
+                           nrow=n, ncol=n)
+    G <- damping * G.temp + Tmat
     
     # get Perron vector (PageRank)
-    p.vec <- page_rank(g, damping = alpha, algo = pr.algo, weights = ww)$vector
+    p.vec <- page_rank(g, damping = damping, algo = pr.algo, weights = ww)$vector
     
     # LinkRank matrix
     Q <- sweep(G,1,p.vec, '*') -  tcrossprod(p.vec)
     
     # get LinkRank Modularity
-    parts <- sort(unique(partition))
+    parts <- sort(unique(pp))
     b.sum <- sapply(parts, function(z) {
-        p.set <- v.names[partition==z]
+        p.set <- v.seq[pp==z]
         sum(Q[p.set,p.set])
     })
     
