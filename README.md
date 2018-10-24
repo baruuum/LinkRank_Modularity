@@ -11,5 +11,7 @@ Notes:
 #### References
 
 Fortunato. 2010. "Community Detection in Graphs," _Physics Reports_, 486
+
 Kim, Y., S.W. Son, H. Jeong. 2010. "Finding Communities in Directed Networks," _Physical Review E_, 81
+
 Leicht, E. A. and M. E. Newman. 2008. "Community Structure in Directed Netowrks," _Physical Review Letters_, 100
