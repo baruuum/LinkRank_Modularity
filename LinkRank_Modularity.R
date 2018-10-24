@@ -1,9 +1,9 @@
 # LinkRank 
 lr.modularity <- function(g,
                           partition, 
-                          damping=.85, 
+                          damping = .85, 
                           pr.algo = 'prpack',
-                          use.weights=T) {
+                          use.weights = T) {
     
     ## Input :
     
@@ -43,7 +43,7 @@ lr.modularity <- function(g,
     # get adjacency matrix
     if (use.weights) {
         
-        if ('weight' %in% edge_attr_names(g)==F) {
+        if ('weight' %in% edge_attr_names(g) == F) {
             
             stop('No edge attribute named "weight" found!')
         }
@@ -70,7 +70,7 @@ lr.modularity <- function(g,
     }
     
     # dead-end nodes
-    dangling <- out.deg==0
+    dangling <- out.deg == 0
     
     # row-normalize A
     G.temp <- sweep(A, 1, out.deg, FUN='/')
@@ -84,20 +84,20 @@ lr.modularity <- function(g,
     
     # add teleportation probabilities
     Tmat <- Matrix::Matrix(1/n * (damping * dangling + 1 - damping), 
-                           nrow=n, ncol=n)
+                           nrow = n, ncol = n)
     G <- damping * G.temp + Tmat
     
     # get Perron vector (PageRank)
     p.vec <- page_rank(g, damping = damping, algo = pr.algo, weights = ww)$vector
     
     # LinkRank matrix
-    Q <- sweep(G,1,p.vec, '*') -  tcrossprod(p.vec)
+    Q <- sweep(G, 1, p.vec, '*') -  tcrossprod(p.vec)
     
     # get LinkRank Modularity
     parts <- sort(unique(pp))
     b.sum <- sapply(parts, function(z) {
-        p.set <- v.seq[pp==z]
-        sum(Q[p.set,p.set])
+        p.set <- v.seq[pp == z]
+        sum(Q[p.set, p.set])
     })
     
     return(sum(b.sum))
