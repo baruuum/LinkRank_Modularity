@@ -5,8 +5,6 @@ lr.modularity <- function(g,
                           pr.algo = 'prpack',
                           use.weights = T) {
     
-    ## Input :
-    
     ## g           = graph (igraph object)
     ## partition   = graph partition (vector or "communities" object)
     ## damping     = damping factor (1 - teleportation prob.)
