@@ -1,9 +1,9 @@
 # LinkRank 
-lr.modularity.new.2 <- function(g,
-                                partition, 
-                                damping = .85, 
-                                pr.algo = 'prpack',
-                                weights = NULL) {
+lr.modularity <- function(g,
+                          partition, 
+                          damping = .85, 
+                          pr.algo = 'prpack',
+                          weights = NULL) {
     
     ## g           = graph (igraph object)
     ## partition   = graph partition (vector or "communities" object)
