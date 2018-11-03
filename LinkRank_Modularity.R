@@ -34,11 +34,8 @@ lr.modularity <- function(g,
     } 
     
     # check dimensions
-    if (length(pp) != length(v.seq)) 
-        stop('Length of partition differs from number of nodes!')
-    
-    # matrix of vertices and partition
-    m.mat <- cbind(v.seq, pp)
+    if (length(pp) != n) 
+        stop('Length of membership vector differs from number of nodes!')
     
     # get adjacency matrix
     if (use.weights) {
