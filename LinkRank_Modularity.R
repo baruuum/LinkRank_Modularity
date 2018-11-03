@@ -1,22 +1,23 @@
 # LinkRank 
-lr.modularity <- function(g,
-                          partition, 
-                          damping = .85, 
-                          pr.algo = 'prpack',
-                          use.weights = T) {
+lr.modularity.new.2 <- function(g,
+                                partition, 
+                                damping = .85, 
+                                pr.algo = 'prpack',
+                                weights = NULL) {
     
     ## g           = graph (igraph object)
     ## partition   = graph partition (vector or "communities" object)
     ## damping     = damping factor (1 - teleportation prob.)
     ## pr.algo     = algorithm to calculate Perron vector,
     ##               possible options are "prpack", "arpack", and "power"
-    ## use.weights = whether to use edge-weights in the calculation
-    
-    require(igraph)
+    ## weights     = If this is NULL and the graph has a weight edge attribute
+    ##               then that is used. If weights is a numerical vector then
+    ##               it used, even if the graph has a weights edge attribute.
+    ##               If this is NA, then no edge weights are used (even if the
+    ##               graph has a weight edge attribute)
     
     # no of nodes
     n <- vcount(g)
-    
     # node sequence
     v.seq <- seq_len(n)
     
@@ -25,56 +26,63 @@ lr.modularity <- function(g,
         
         pp <- membership(partition)
         
-    } else {
-        
-        pp <- partition
-        
-    } 
+    } else pp <- partition
     
     # check dimensions
     if (length(pp) != n) 
         stop('Length of membership vector differs from number of nodes!')
     
-    # get adjacency matrix
-    if (use.weights) {
+    # get adjacency matrix & out-degree
+    if (is.vector(weights) & length(weights) > 1) {
         
-        if ('weight' %in% edge_attr_names(g) == F) {
+        # check arg
+        if (ecount(g) != length(weights))
+            stop("'weights' differes in length from ecount!")
+        if (!is.numeric(weights))
+            stop("'weights' must be 'NA','NULL', or a numeric vector!")
+        
+        edge_attr(g, 'tmp') <- weights
+        A <- get.adjacency(g, type = 'both', attr = 'tmp')
+        
+        out.deg <- strength(g, mode = 'out', weights = weights)
+        
+    } else if (is.null(weights)) {
+        
+        if ('weight' %in% edge_attr_names(g)) {
             
-            stop('No edge attribute named "weight" found!')
+            A <- get.adjacency(g, type='both', attr='weight')
+            out.deg <- strength(g, mode = 'out')
+            
+        }  else {
+            
+            A <- get.adjacency(g, type='both')
+            out.deg <- degree(g, mode = 'out')
+            
         }
         
-        A <- get.adjacency(g, type='both', attr='weight')
-        ww <- edge_attr(g, 'weight')
+    } else if (is.na(weights)) {
+        
+        A <- get.adjacency(g, type='both')
+        out.deg <- degree(g, mode = 'out')
         
     } else {
         
-        A <- get.adjacency(g, type='both')
-        ww <- NULL
+        stop("'weights' option has to be 'NA','NULL', or a numeric vector!")
         
     }
     
-    # out degrees
-    if (use.weights) {
-        
-        out.deg <- strength(g, mode = 'out', weights = ww)
-        
-    } else {
-        
-        out.deg <- degree(g, mode = 'out')
-        
-    }
+    
     
     # dead-end nodes
     dangling <- out.deg == 0
     
-    # row-normalize A
-    G.temp <- sweep(A, 1, out.deg, FUN='/')
+    # row-normalize A (recycle vector)
+    G.temp <- A / out.deg
+    # equivalent to sweep(A, 1, out.deg, FUN='/')
     
     # set rows for dead-end nodes to zero
     if (sum(dangling) > 0) {
-        
         G.temp[dangling,] <- 0
-        
     }
     
     # add teleportation probabilities
@@ -83,17 +91,12 @@ lr.modularity <- function(g,
     G <- damping * G.temp + Tmat
     
     # get Perron vector (PageRank)
-    p.vec <- page_rank(g, damping = damping, algo = pr.algo, weights = ww)$vector
+    p.vec <- page_rank(g, damping = damping, algo = pr.algo, weights = weights)$vector
     
     # LinkRank matrix
-    Q <- sweep(G, 1, p.vec, '*') -  tcrossprod(p.vec)
+    Q <- G * p.vec -  tcrossprod(p.vec)
+    # equivalent to sweep(G, 1, p.vec, '*') -  tcrossprod(p.vec)
     
     # get LinkRank Modularity
-    parts <- sort(unique(pp))
-    b.sum <- sapply(parts, function(z) {
-        p.set <- v.seq[pp == z]
-        sum(Q[p.set, p.set])
-    })
-    
-    return(sum(b.sum))
+    return(sum(Q[outer(pp, pp, '==')]))
 }
