@@ -26,7 +26,13 @@ lr.modularity <- function(g,
         
         pp <- membership(partition)
         
-    } else pp <- partition
+    } else {
+      
+      if (!is.numeric(partition))
+          stop("'partition' has to be a 'communities' object or a numeric vector!")
+      pp <- partition
+      
+    }
     
     # check dimensions
     if (length(pp) != n) 
@@ -71,8 +77,6 @@ lr.modularity <- function(g,
         
     }
     
-    
-    
     # dead-end nodes
     dangling <- out.deg == 0
     
@@ -99,4 +103,5 @@ lr.modularity <- function(g,
     
     # get LinkRank Modularity
     return(sum(Q[outer(pp, pp, '==')]))
+  
 }
