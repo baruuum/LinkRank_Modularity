@@ -6,7 +6,7 @@ Notes:
 
 1. The code uses the `page_rank` function from the `igraph` package to calculate the Perron vector. 
 2. The default teleportation probability is set to .15 as recommended in Kim et al (2012). The option `damping` is equal to one minus the teleportation probability (in order to keep it inline with the `igraph::page_rank` function). Notice that the teleportation probability is often not needed in many undirected and connected graphs. Teleportation can be set off by specifying `damping = 1`.
-3. By default, `use.weights` is set to `TRUE` and the code will throw an error if it cannot find an edge attribute in the graph under the name `weight`. If the graph is unweighted, simply setting `use.weights = F` will solve the problem.
+3. Similar to the `weights` option in many `igraph` functions, if `weights` is NULL and the graph has a weight edge attribute then that is used. If weights is a numerical vector then it used, even if the graph has a weights edge attribute. If this is NA, then no edge weights are used (even if the graph has a weight edge attribute).
 
 #### References
 
