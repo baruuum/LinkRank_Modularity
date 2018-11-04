@@ -6,7 +6,7 @@ lr.modularity <- function(g,
                           weights = NULL) {
     
     ## g           = graph (igraph object)
-    ## partition   = graph partition (vector or "communities" object)
+    ## partition   = graph partition (numeric vector of memberships or "communities" object)
     ## damping     = damping factor (1 - teleportation prob.)
     ## pr.algo     = algorithm to calculate Perron vector,
     ##               possible options are "prpack", "arpack", and "power"
