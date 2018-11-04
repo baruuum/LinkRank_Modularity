@@ -16,6 +16,16 @@ lr.modularity <- function(g,
     ##               If this is NA, then no edge weights are used (even if the
     ##               graph has a weight edge attribute)
     
+    # check args
+    if (!is.igraph(g)) 
+        stop('graph is not an i.graph object')
+    
+    if (damping > 1 | damping < 0) 
+        stop('damping factor has to be between zero and one!')
+    
+    # get algorithm name to calculate Perron vector
+    pr.algo <- match.arg(pr.algo, c('prpack','arpack','power'))
+    
     # no of nodes
     n <- vcount(g)
     # node sequence
@@ -41,7 +51,7 @@ lr.modularity <- function(g,
     # get adjacency matrix & out-degree
     if (is.vector(weights) & length(weights) > 1) {
         
-        # check arg
+        # check args
         if (ecount(g) != length(weights))
             stop("'weights' differes in length from ecount!")
         if (!is.numeric(weights))
