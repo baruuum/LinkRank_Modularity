@@ -111,7 +111,7 @@ lr.modularity <- function(g,
     Q <- G * p.vec -  tcrossprod(p.vec)
     # equivalent to sweep(G, 1, p.vec, '*') -  tcrossprod(p.vec)
     
-    # get LinkRank Modularity
+    # get LinkRank Modularity by summing over within-community weights
     return(sum(Q[outer(pp, pp, '==')]))
   
 }
